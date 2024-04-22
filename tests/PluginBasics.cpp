@@ -20,10 +20,21 @@ TEST_CASE ("Plugin instance", "[instance]")
     SECTION ("name")
     {
         CHECK_THAT (testPlugin.getName().toStdString(),
-            Catch::Matchers::Equals ("Pamplejuce Demo"));
+            Catch::Matchers::Equals ("Opus Databending Drumkit"));
     }
 }
 
+TEST_CASE("Prepare to play", "[prepare]")
+{
+    PluginProcessor testPlugin;
+
+    // This lets us use JUCE's MessageManager without leaking.
+    // PluginProcessor might need this if you use the APVTS for example.
+    // You'll also need it for tests that rely on juce::Graphics, juce::Timer, etc.
+    auto gui = juce::ScopedJuceInitialiser_GUI {};
+
+    testPlugin.prepareToPlay(44100, 512);
+}
 
 #ifdef PAMPLEJUCE_IPP
     #include <ipp.h>

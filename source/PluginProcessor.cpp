@@ -89,6 +89,24 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
+
+    int err = OPUS_INTERNAL_ERROR;
+    decoder = opus_decoder_create(static_cast<int>(48000), 1, &err);
+    if (err != OPUS_OK || decoder == nullptr) {
+        DBG ( "Creating decoder failed" );
+    }
+
+    auto random = juce::Random();
+    random.setSeedRandomly();
+
+    auto data = std::vector<unsigned char>(185);
+    data[0] = 115;
+    data[1] = 3;
+
+    random.fillBitsRandomly(&(data[2]), (data.size() - 2));
+    auto output = juce::AudioBuffer<float>(1, 1440 * 32);
+    auto numSamplesDecoded = opus_decode_float(decoder, &data[0], data.size(), output.getWritePointer(0), output.getNumSamples(), 0);
+    std::cout << numSamplesDecoded << "\n";
 }
 
 void PluginProcessor::releaseResources()
