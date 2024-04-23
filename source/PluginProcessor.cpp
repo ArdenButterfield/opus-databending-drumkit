@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include "OpusSynthVoice.h"
+
 //==============================================================================
 PluginProcessor::PluginProcessor()
      : AudioProcessor (BusesProperties()
@@ -12,6 +14,13 @@ PluginProcessor::PluginProcessor()
                      #endif
                        )
 {
+    for (int i = 0; i < NUM_SYNTH_VOICES; ++i) {
+        synthesiser.addVoice(new OpusSynthVoice());
+    }
+    for (unsigned i = 0; i < 127; ++i) {
+        sounds.emplace_back(42, i + 1, i);
+        synthesiser.addSound(&sounds[i]);
+    }
 }
 
 PluginProcessor::~PluginProcessor()
@@ -89,25 +98,8 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
-
-    int err = OPUS_INTERNAL_ERROR;
-    decoder = opus_decoder_create(static_cast<int>(48000), 1, &err);
-    if (err != OPUS_OK || decoder == nullptr) {
-        DBG ( "Creating decoder failed" );
-    }
-
-    auto random = juce::Random();
-    random.setSeedRandomly();
-
-    auto data = std::vector<unsigned char>(185);
-    data[0] = 115;
-    data[1] = 3;
-
-    random.fillBitsRandomly(&(data[2]), (data.size() - 2));
-    auto output = juce::AudioBuffer<float>(1, 1440 * 32);
-    auto numSamplesDecoded = opus_decode_float(decoder, &data[0], data.size(), output.getWritePointer(0), output.getNumSamples(), 0);
-    std::cout << numSamplesDecoded << "\n";
-}
+    synthesiser.setCurrentPlaybackSampleRate(sampleRate);
+ }
 
 void PluginProcessor::releaseResources()
 {
@@ -155,18 +147,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
+    synthesiser.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
 //==============================================================================

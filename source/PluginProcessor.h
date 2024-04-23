@@ -8,6 +8,8 @@
 #include "ipps.h"
 #endif
 
+#include "OpusSynthSound.h"
+
 class PluginProcessor : public juce::AudioProcessor
 {
 public:
@@ -41,6 +43,9 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
+    juce::Synthesiser synthesiser;
+    const int NUM_SYNTH_VOICES = 16;
+    std::vector<OpusSynthSound> sounds;
     OpusDecoder* decoder;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

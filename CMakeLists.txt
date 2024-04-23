@@ -62,6 +62,12 @@ juce_add_plugin("${PROJECT_NAME}"
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
 
+        IS_SYNTH TRUE                       # Is this a synth or an effect?
+        NEEDS_MIDI_INPUT TRUE               # Does the plugin need midi input?
+        NEEDS_MIDI_OUTPUT FALSE              # Does the plugin need midi output?
+        IS_MIDI_EFFECT FALSE                 # Is this plugin a MIDI effect?
+        EDITOR_WANTS_KEYBOARD_FOCUS FALSE    # Does the editor need keyboard focus?
+
         # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
         COPY_PLUGIN_AFTER_BUILD TRUE
 
