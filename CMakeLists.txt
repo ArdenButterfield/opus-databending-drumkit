@@ -9,6 +9,8 @@ include (PamplejuceVersion)
 # Configures universal binaries and decides which version of macOS to support
 include(PamplejuceMacOS)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE true)
+
 # Change me!
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
@@ -61,6 +63,12 @@ juce_add_plugin("${PROJECT_NAME}"
         # Change me!
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
+
+        IS_SYNTH TRUE                       # Is this a synth or an effect?
+        NEEDS_MIDI_INPUT TRUE               # Does the plugin need midi input?
+        NEEDS_MIDI_OUTPUT FALSE              # Does the plugin need midi output?
+        IS_MIDI_EFFECT FALSE                 # Is this plugin a MIDI effect?
+        EDITOR_WANTS_KEYBOARD_FOCUS FALSE    # Does the editor need keyboard focus?
 
         # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
         COPY_PLUGIN_AFTER_BUILD TRUE
