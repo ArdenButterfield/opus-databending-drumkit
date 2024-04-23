@@ -5,7 +5,7 @@
 #include "OpusSynthSound.h"
 #include <opus.h>
 
-OpusSynthSound::OpusSynthSound (int64_t randomSeed, int n, int note)
+OpusSynthSound::OpusSynthSound (int64_t randomSeed, int n, int _note) : note(_note)
 {
     auto random = juce::Random();
     random.setSeed(randomSeed);
@@ -19,7 +19,7 @@ OpusSynthSound::OpusSynthSound (int64_t randomSeed, int n, int note)
     const auto frameSize = 1440;
     const auto numFrames = 32;
     buffer.setSize(1, frameSize * numFrames);
-
+    buffer.clear();
     auto data = std::vector<unsigned char>(185);
     data[0] = 115;
     data[1] = 3;
@@ -41,7 +41,6 @@ OpusSynthSound::OpusSynthSound (int64_t randomSeed, int n, int note)
             buffer.getWritePointer(0, numSamplesDecoded),
             frameSize,
             0);
-        DBG( decodedInRound << " samples decoded");
         numSamplesDecoded += decodedInRound;
     }
 }

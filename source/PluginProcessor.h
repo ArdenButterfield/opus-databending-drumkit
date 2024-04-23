@@ -45,7 +45,7 @@ public:
 private:
     juce::Synthesiser synthesiser;
     const int NUM_SYNTH_VOICES = 16;
-    std::vector<OpusSynthSound> sounds;
+    std::vector<std::unique_ptr<OpusSynthSound>> sounds;
     OpusDecoder* decoder;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };
