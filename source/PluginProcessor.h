@@ -2,13 +2,12 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
-#include <opus.h>
-
 #if (MSVC)
 #include "ipps.h"
 #endif
 
-#include "OpusSynthSound.h"
+#include "State/SynthState.h"
+#include "SampleBuilder.h"
 
 class PluginProcessor : public juce::AudioProcessor
 {
@@ -42,10 +41,13 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    SynthState& getSynthState();
+
 private:
+    SampleBuilder sampleBuilder;
+    SynthState synthState;
+
     juce::Synthesiser synthesiser;
     const int NUM_SYNTH_VOICES = 16;
-    std::vector<std::unique_ptr<OpusSynthSound>> sounds;
-    OpusDecoder* decoder;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

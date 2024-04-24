@@ -5,10 +5,9 @@
 #include "OpusSynthVoice.h"
 #include "OpusSynthSound.h"
 
-OpusSynthVoice::OpusSynthVoice()
+OpusSynthVoice::OpusSynthVoice(SynthState& s, SampleBuilder& b) : synthState(s), sampleBuilder(b), buffer(nullptr), bufferPosition(0)
 {
-    buffer = nullptr;
-    bufferPosition = 0;
+
 }
 
 bool OpusSynthVoice::canPlaySound (juce::SynthesiserSound* synthesiserSound)
@@ -22,9 +21,11 @@ bool OpusSynthVoice::canPlaySound (juce::SynthesiserSound* synthesiserSound)
 void OpusSynthVoice::startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound* synthesiserSound, int)
 {
     DBG( "start note " << midiNoteNumber );
-    auto sound = dynamic_cast<OpusSynthSound*>(synthesiserSound);
-    buffer = sound->getBuffer();
-    bufferPosition = 0;
+    auto note = synthState.getNoteState(midiNoteNumber);
+    if (note != nullptr) {
+        buffer = sampleBuilder.getSample(*note);
+        bufferPosition = 0;
+    }
 }
 
 void OpusSynthVoice::stopNote (float, bool allowTailOff)

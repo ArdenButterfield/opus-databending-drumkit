@@ -4,12 +4,48 @@
 
 TEST_CASE ("Boot performance")
 {
+//    BENCHMARK_ADVANCED("do nothing")
+//    (Catch::Benchmark::Chronometer meter)
+//    {
+//        int j = 0;
+//        meter.measure ([&] (int i) {j += i;});
+//        std::cout << j;
+//    };
+
+    BENCHMARK_ADVANCED("opus decoder")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        int err = OPUS_INTERNAL_ERROR;
+        auto decoder = opus_decoder_create(static_cast<int>(48000), 1, &err);
+        if (err != OPUS_OK || decoder == nullptr) {
+            DBG ( "Creating decoder failed" );
+        }
+        juce::AudioBuffer<float> buffer;
+
+        const auto frameSize = 1440;
+        const auto numFrames = 32;
+        buffer.setSize(1, frameSize * numFrames);
+        buffer.clear();
+        auto data = std::vector<unsigned char>(185);
+        data[0] = 115;
+        data[1] = 3;
+        meter.measure ([&] (int /* i */) {
+            auto decodedInRound = opus_decode_float (
+                decoder,
+                &data[0],
+                data.size(),
+                buffer.getWritePointer (0, 0),
+                frameSize,
+                0);
+        });
+    };
+
     BENCHMARK_ADVANCED ("Processor constructor")
     (Catch::Benchmark::Chronometer meter)
     {
         auto gui = juce::ScopedJuceInitialiser_GUI {};
         std::vector<Catch::Benchmark::storage_for<PluginProcessor>> storage (size_t (meter.runs()));
-        meter.measure ([&] (int i) { storage[(size_t) i].construct(); });
+        meter.measure ([&] (int i) { storage[(size_t) i].construct();});
     };
 
     BENCHMARK_ADVANCED ("Processor destructor")
