@@ -20,7 +20,7 @@ private:
     void buttonClicked(juce::Button* b) override;
     void buttonStateChanged(juce::Button* b) override;
 
-    timerCallback
+    void timerCallback() override;
     NoteSlot* homeSlot;
     SynthState& synthState;
     juce::ArrowButton previousSound;

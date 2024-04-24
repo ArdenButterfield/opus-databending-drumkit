@@ -10,7 +10,7 @@
 #include "NoteInGrid.h"
 #include "../State/SynthState.h"
 
-class NoteSlot : public juce::Component
+class NoteSlot : public juce::Component, public juce::Timer
 {
 public:
     NoteSlot(SynthState& state, int midiNote);
@@ -21,6 +21,8 @@ public:
     void mouseUp(const juce::MouseEvent &event) override;
     const int midiNote;
 private:
+    void timerCallback() override;
+
     SynthState& synthState;
     std::unique_ptr<NoteInGrid> note;
 };

@@ -14,7 +14,7 @@ PluginProcessor::PluginProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-      synthState(0, 128, {42, 0})
+      synthState(0, 128, {12345, 42})
 {
     for (int i = 0; i < NUM_SYNTH_VOICES; ++i) {
         synthesiser.addVoice(new OpusSynthVoice(synthState, sampleBuilder));

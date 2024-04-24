@@ -11,18 +11,30 @@ NoteInGrid::NoteInGrid(SynthState& state, NoteSlot* slot)
       previousSound("Previous", 0.5, juce::Colours::darkviolet),
       nextSound("Next", 0.0, juce::Colours::darkviolet)
 {
+    startTimerHz(60);
     synthState.addNoteDefault(homeSlot->midiNote);
 
     addAndMakeVisible(previousSound);
     addAndMakeVisible(nextSound);
+
+    previousSound.addListener(this);
+    nextSound.addListener(this);
 }
 void NoteInGrid::paint (juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::lightskyblue);
+
+    if (synthState.isNoteBeingPlayed(homeSlot->midiNote)) {
+        g.fillAll(juce::Colours::yellow);
+    } else {
+        g.fillAll(juce::Colours::lightskyblue);
+    }
     g.setColour(juce::Colours::darkslateblue);
-    g.drawText(juce::String(synthState.getNoteState(homeSlot->midiNote)->noteGenIndex),
-        getLocalBounds().withHeight(getHeight() / 2),
-        juce::Justification::centred);
+    const auto s = synthState.getNoteState(homeSlot->midiNote);
+    if (s != nullptr) {
+        g.drawText(juce::String(s->noteGenIndex),
+                   getLocalBounds().withHeight(getHeight() / 2),
+                   juce::Justification::centred);
+    }
 }
 void NoteInGrid::resized()
 {
@@ -42,4 +54,8 @@ void NoteInGrid::buttonClicked (juce::Button* button)
 void NoteInGrid::buttonStateChanged (juce::Button* button)
 {
 
+}
+void NoteInGrid::timerCallback()
+{
+    repaint();
 }

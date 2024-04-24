@@ -20,6 +20,7 @@ bool OpusSynthVoice::canPlaySound (juce::SynthesiserSound* synthesiserSound)
 
 void OpusSynthVoice::startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound* synthesiserSound, int)
 {
+    synthState.setNoteBeingPlayed(midiNoteNumber, true);
     DBG( "start note " << midiNoteNumber );
     auto note = synthState.getNoteState(midiNoteNumber);
     if (note != nullptr) {
@@ -30,7 +31,7 @@ void OpusSynthVoice::startNote (int midiNoteNumber, float velocity, juce::Synthe
 
 void OpusSynthVoice::stopNote (float, bool allowTailOff)
 {
-
+    synthState.setNoteBeingPlayed(getCurrentlyPlayingNote(), false);
 }
 
 void OpusSynthVoice::pitchWheelMoved (int)

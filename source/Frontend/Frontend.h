@@ -10,7 +10,7 @@
 #include "NoteGrid.h"
 #include "../State/SynthState.h"
 
-class Frontend : public juce::Component, public juce::Timer
+class Frontend : public juce::Component
 {
 public:
     Frontend(SynthState& state);

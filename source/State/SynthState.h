@@ -44,12 +44,14 @@ public:
     void addNoteDefault(int midiPitch);
     NoteState* getNoteState(int midiPitch);
     void modifyGenIndex(int midiPitch, int delta);
+    void setNoteBeingPlayed(int midiPitch, bool shouldBePlaying);
+    bool isNoteBeingPlayed(int midiPitch);
 private:
     int minPitch;
     int maxPitch;
 
     const NoteState defaultNote;
-
+    std::vector<bool> notesBeingPlayed;
     std::vector<std::unique_ptr<NoteState>> noteMaps;
 };
 
