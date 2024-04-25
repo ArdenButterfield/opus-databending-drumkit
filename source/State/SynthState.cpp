@@ -9,6 +9,7 @@ SynthState::SynthState (int _minPitch, int _maxPitch, NoteState _defaultNote) : 
 {
     noteMaps.resize(maxPitch - minPitch);
     notesBeingPlayed.resize(maxPitch - minPitch);
+    midiPitchToMonitor = -1;
 }
 
 SynthState::~SynthState()
@@ -27,6 +28,7 @@ void SynthState::addNote(int midiPitch, const NoteState& noteState)
 {
     if (midiPitch >= minPitch && midiPitch < maxPitch) {
         noteMaps[midiPitch - minPitch] = std::make_unique<NoteState>(noteState);
+        midiPitchToMonitor = midiPitch;
     }
 }
 NoteState* SynthState::getNoteState (int midiPitch)
@@ -46,7 +48,8 @@ void SynthState::modifyGenIndex (int midiPitch, int delta)
     auto& note = noteMaps[midiPitch - minPitch];
     if ((int)(note->noteGenIndex) + delta >= 0) {
         note->noteGenIndex += delta;
-        DBG( "modify note " << note->toString() << " with delta" << delta);
+        DBG( "modify note " << note->toString() << " with delta " << delta);
+        midiPitchToMonitor = midiPitch;
     }
 }
 void SynthState::setNoteBeingPlayed (int midiPitch, bool shouldBePlaying)

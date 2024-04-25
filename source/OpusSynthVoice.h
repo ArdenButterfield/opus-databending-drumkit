@@ -7,7 +7,7 @@
 
 #include <juce_audio_basics/juce_audio_basics.h>
 
-#include "SampleBuilder.h"
+#include "Sampler/SampleBuilder.h"
 #include "State/SynthState.h"
 
 class OpusSynthVoice : public juce::SynthesiserVoice

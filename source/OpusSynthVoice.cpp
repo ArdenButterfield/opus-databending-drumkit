@@ -24,7 +24,7 @@ void OpusSynthVoice::startNote (int midiNoteNumber, float velocity, juce::Synthe
     DBG( "start note " << midiNoteNumber );
     auto note = synthState.getNoteState(midiNoteNumber);
     if (note != nullptr) {
-        buffer = sampleBuilder.getSample(*note);
+        buffer = sampleBuilder.getSampleNoBlocking(*note);
         bufferPosition = 0;
     }
 }

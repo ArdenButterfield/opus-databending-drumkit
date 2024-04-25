@@ -29,6 +29,19 @@ struct NoteState
     }
 };
 
+namespace std
+{
+    template <>
+    struct hash<NoteState>
+    {
+        std::size_t operator()(const NoteState& noteState) const
+        {
+            return hash<std::string>()(noteState.toString());
+        }
+    };
+}
+
+
 inline bool operator==(const NoteState& lhs, const NoteState& rhs)
 {
     return lhs.seed == rhs.seed && lhs.noteGenIndex == rhs.noteGenIndex;
@@ -46,6 +59,10 @@ public:
     void modifyGenIndex(int midiPitch, int delta);
     void setNoteBeingPlayed(int midiPitch, bool shouldBePlaying);
     bool isNoteBeingPlayed(int midiPitch);
+
+    std::atomic<bool> monitorSwitchingSamples;
+
+    std::atomic<int> midiPitchToMonitor;
 private:
     int minPitch;
     int maxPitch;

@@ -6,8 +6,10 @@
 #include "ipps.h"
 #endif
 
+#include "Sampler/SampleBuilder.h"
 #include "State/SynthState.h"
-#include "SampleBuilder.h"
+#include "Sampler/SampleRefresher.h"
+#include "ChangingSamplesMonitor.h"
 
 class PluginProcessor : public juce::AudioProcessor
 {
@@ -46,6 +48,8 @@ public:
 private:
     SampleBuilder sampleBuilder;
     SynthState synthState;
+    SampleRefresher sampleRefresher;
+    ChangingSamplesMonitor changingSamplesMonitor;
 
     juce::Synthesiser synthesiser;
     const int NUM_SYNTH_VOICES = 16;

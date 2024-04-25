@@ -14,7 +14,9 @@ PluginProcessor::PluginProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ),
-      synthState(0, 128, {12345, 42})
+      synthState(0, 128, {12345, 42}),
+      sampleRefresher(sampleBuilder, synthState),
+      changingSamplesMonitor(sampleBuilder, synthState)
 {
     for (int i = 0; i < NUM_SYNTH_VOICES; ++i) {
         synthesiser.addVoice(new OpusSynthVoice(synthState, sampleBuilder));
@@ -134,12 +136,7 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
-
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -149,6 +146,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     buffer.clear();
 
     synthesiser.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+    changingSamplesMonitor.processBlock(buffer);
 }
 
 //==============================================================================

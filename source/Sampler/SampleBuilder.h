@@ -5,21 +5,11 @@
 #ifndef OPUSDATABENDINGDRUMKIT_SAMPLEBUILDER_H
 #define OPUSDATABENDINGDRUMKIT_SAMPLEBUILDER_H
 
-#include "State/SynthState.h"
+#include "../State/SynthState.h"
 
 #include "juce_audio_basics/juce_audio_basics.h"
 
-namespace std
-{
-template <>
-struct hash<NoteState>
-{
-    std::size_t operator()(const NoteState& noteState) const
-    {
-        return hash<std::string>()(noteState.toString());
-    }
-};
-}
+#include "juce_events/juce_events.h"
 
 class SampleBuilder
 {
@@ -27,8 +17,12 @@ public:
     SampleBuilder();
     ~SampleBuilder();
 
-    juce::AudioBuffer<float>* getSample(NoteState& note);
+    void loadSample(NoteState& note);
+    juce::AudioBuffer<float>* getSampleNoBlocking(NoteState& note);
+
 private:
+    juce::ThreadPool threadPool;
+
     std::unordered_map<NoteState, juce::AudioBuffer<float>> memoizedSamples;
 };
 

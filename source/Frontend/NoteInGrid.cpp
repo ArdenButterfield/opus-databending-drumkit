@@ -36,6 +36,7 @@ void NoteInGrid::paint (juce::Graphics& g)
                    juce::Justification::centred);
     }
 }
+
 void NoteInGrid::resized()
 {
     auto bottomPart = getLocalBounds().withTrimmedTop(getHeight() / 2);

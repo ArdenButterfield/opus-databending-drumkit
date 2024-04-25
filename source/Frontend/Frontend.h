@@ -10,7 +10,7 @@
 #include "NoteGrid.h"
 #include "../State/SynthState.h"
 
-class Frontend : public juce::Component
+class Frontend : public juce::Component, public juce::Button::Listener, public juce::Timer
 {
 public:
     Frontend(SynthState& state);
@@ -21,6 +21,13 @@ private:
     SynthState& synthState;
     juce::Viewport viewport;
     NoteGrid noteGrid;
+
+    juce::ToggleButton monitorChangingSamplesButton;
+
+    void timerCallback() override;
+
+    void buttonStateChanged(juce::Button *) override;
+    void buttonClicked(juce::Button *) override;
 };
 
 #endif //OPUSDATABENDINGDRUMKIT_FRONTEND_H
