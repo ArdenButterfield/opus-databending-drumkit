@@ -10,6 +10,11 @@
 
 #include "juce_events/juce_events.h"
 
+/* As we click through the samples in the GUI, we may want to hear which samples are being clicked to. Think
+ * the headphone icon in an ableton sampler.
+ * This component plays them
+ */
+
 class ChangingSamplesMonitor
 {
 public:

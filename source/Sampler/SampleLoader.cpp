@@ -4,6 +4,7 @@
 
 #include "SampleLoader.h"
 #include "opus.h"
+#include "../CreateSample/CreateSample.h"
 
 SampleLoader::SampleLoader(std::unordered_map<NoteState, juce::AudioBuffer<float>>& m, NoteState n)
     : juce::ThreadPoolJob(n.toString()), memoizedSamples(m), noteState(n)
