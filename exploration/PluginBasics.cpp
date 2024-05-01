@@ -228,7 +228,7 @@ TEST_CASE("morph over time", "[morph]")
                 auto numSamplesDecoded = 0;
                 for (int i = 0; i < numFrames; ++i)
                 {
-                    auto decodedInRound = opus_decode_float (
+                    auto decodedInRound = opus_decode_float (abs
                         decoder,
                         (i == 0) ? &modData[0] : &headers[0],
                         (i == 0) ? modData.size() : headers.size(),
