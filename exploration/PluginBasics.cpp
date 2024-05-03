@@ -126,24 +126,165 @@ TEST_CASE ("bitflip_tryall", "[bitflip_tryall]")
 
 #endif
 
-float similarity(juce::AudioBuffer<float>& a, juce::AudioBuffer<float>& b)
+#include "SampleComparer.h"
+
+const auto frameSize = 1440;
+const auto numFrames = 1;
+
+
+void fillBuffer(std::vector<unsigned char>& data, juce::AudioBuffer<float>& buffer)
 {
-    auto c = juce::AudioBuffer<float>(a.getNumChannels(), juce::jmax(a.getNumSamples(), b.getNumSamples()));
-    c.clear();
-    c.addFrom(0,0,a,0,0,a.getNumSamples(), 1);
-    c.addFrom(0,0,b,0,0,b.getNumSamples(), -1);
-    auto similarity = c.getRMSLevel(0,0,c.getNumSamples());
-    return similarity;
+    int err = OPUS_INTERNAL_ERROR;
+    auto decoder = opus_decoder_create (static_cast<int> (48000), 1, &err);
+    if (err != OPUS_OK || decoder == nullptr)
+    {
+        DBG ("Creating decoder failed");
+    }
+
+    auto numSamplesDecoded = 0;
+    for (int i = 0; i < numFrames; ++i)
+    {
+        auto decodedInRound = opus_decode_float (
+            decoder,
+            &data[0],
+            (i == 0) ? data.size() : 2,
+            buffer.getWritePointer (0, numSamplesDecoded),
+            frameSize,
+            0);
+        numSamplesDecoded += decodedInRound;
+    }
+
+    opus_decoder_destroy (decoder);
+
+    auto rescale_factor = 0.5f / buffer.getMagnitude (0, buffer.getNumSamples());
+    buffer.applyGain (rescale_factor);
+
 }
 
+void morphToDestination() {
+    auto comparer = SampleComparer(frameSize * numFrames, 48000);
+
+    auto random = juce::Random();
+    auto start_seed = random.nextInt();
+    auto end_seed = random.nextInt();
+
+    auto buffer = juce::AudioBuffer<float>();
+    buffer.setSize (1, frameSize * numFrames);
+    buffer.clear();
+    auto start_buffer = juce::AudioBuffer<float>();
+    start_buffer.setSize (1, frameSize * numFrames);
+    start_buffer.clear();
+    auto end_buffer = juce::AudioBuffer<float>();
+    end_buffer.setSize (1, frameSize * numFrames);
+    end_buffer.clear();
+
+
+
+    auto outputFile = juce::File ("/home/arden/projects/opus_drumkit/morph_with_direction/morph_"
+                                  + juce::String (start_seed) + "_" + juce::String (end_seed) + ".wav");
+    auto outStream = outputFile.createOutputStream();
+    auto format = juce::WavAudioFormat();
+    auto arr = juce::StringPairArray();
+    auto writer = format.createWriterFor (outStream.get(), 48000, 1, 32, arr, 0);
+
+
+    auto start_data = std::vector<unsigned char> (185);
+    start_data[0] = 115;
+    start_data[1] = 3;
+
+    auto end_data = std::vector<unsigned char> (185);
+    end_data[0] = 115;
+    end_data[1] = 3;
+
+    random.setSeed(start_seed);
+    random.fillBitsRandomly (&(start_data[2]), (start_data.size() - 2));
+    random.setSeed(end_seed);
+    random.fillBitsRandomly (&(end_data[2]), (end_data.size() - 2));
+
+    fillBuffer(start_data, start_buffer);
+    fillBuffer(end_data, end_buffer);
+
+    writer->writeFromAudioSampleBuffer(start_buffer, 0, start_buffer.getNumSamples());
+    writer->writeFromAudioSampleBuffer(end_buffer, 0, end_buffer.getNumSamples());
+
+
+    auto angle = std::acos(comparer.similarityScore(start_buffer, end_buffer));
+
+    std::unordered_set<unsigned int> bitsToFlip;
+    for (auto byte = 2; byte < start_data.size(); ++byte) {
+        for (auto bit = 0; bit < 8; ++bit) {
+            if ((start_data[byte] & (1 << bit)) != (end_data[byte] & (1 << bit))) {
+                bitsToFlip.insert(byte * 8 + bit);
+            }
+        }
+    }
+
+    auto data = start_data;
+
+    auto steps = static_cast<float>(bitsToFlip.size());
+
+    while (!bitsToFlip.empty()) {
+        auto best_flip = *bitsToFlip.begin();
+        auto offTarget = 10.f;
+
+        auto amountCovered = (steps - bitsToFlip.size()) / steps;
+        auto targetAngleFromStart = angle * amountCovered;
+        auto targetAngleFromEnd = angle * (1 - amountCovered);
+
+        auto targetSimilarityToStart = std::cos(targetAngleFromStart);
+        auto targetSimilarityToEnd = std::cos(targetAngleFromEnd);
+
+        for (auto i : bitsToFlip) {
+            // make flip
+            data[i / 8] ^= (1 << (i % 8));
+            fillBuffer(data, buffer);
+
+            auto similarityToStart = comparer.similarityScore(start_buffer, buffer);
+            auto similarityToEnd = comparer.similarityScore(end_buffer, buffer);
+
+            auto difference = (similarityToStart - targetSimilarityToStart) * (similarityToStart - targetSimilarityToStart) +
+                              (similarityToEnd - targetSimilarityToEnd) * (similarityToEnd - targetSimilarityToEnd);
+
+            if (difference < offTarget) {
+                offTarget = difference;
+                best_flip = i;
+            }
+
+            // undo flip
+            data[i / 8] ^= (1 << (i % 8));
+        }
+
+        data[best_flip / 8] ^= (1 << (best_flip % 8));
+        fillBuffer(data, buffer);
+        bitsToFlip.erase(best_flip);
+        writer->writeFromAudioSampleBuffer(buffer, 0, buffer.getNumSamples());
+    }
+}
+
+
+TEST_CASE("morph to destination", "[morphtodest]")
+{
+    juce::ThreadPool pool;
+    for (int iteration = 0; iteration < 6; ++iteration) {
+        pool.addJob(morphToDestination);
+    }
+    while (pool.getNumJobs() > 0) {
+        pool.waitForJobToFinish(pool.getJob(0), 100000000);
+    }
+}
+
+#if 0
 TEST_CASE("morph over time", "[morph]")
 {
-    for (int seed = 111100; seed < 111130; ++seed) {
+    const auto frameSize = 1440;
+    const auto numFrames = 4;
+
+    auto comparer = SampleComparer(frameSize * numFrames, 48000);
+
+    for (int seed = 1225; seed < 1235; ++seed) {
         auto random = juce::Random();
         random.setSeed (seed);
 
-        const auto frameSize = 1440;
-        const auto numFrames = 4;
         auto initialBuffer = juce::AudioBuffer<float>();
         initialBuffer.setSize (1, frameSize * numFrames);
         initialBuffer.clear();
@@ -207,9 +348,9 @@ TEST_CASE("morph over time", "[morph]")
         currentBuffer = initialBuffer;
 
         std::cout << "morphing\n";
-        for (int morphStep = 0; morphStep < 2000; ++morphStep) {
+        for (int morphStep = 0; morphStep < 100; ++morphStep) {
 
-            auto bestDifference = 10.0f;
+            auto bestDifference = 10.f;
             auto best_i = -1;
             for (int step = 0; step < (data.size() - 2) * 8; step++)
             {
@@ -228,7 +369,7 @@ TEST_CASE("morph over time", "[morph]")
                 auto numSamplesDecoded = 0;
                 for (int i = 0; i < numFrames; ++i)
                 {
-                    auto decodedInRound = opus_decode_float (abs
+                    auto decodedInRound = opus_decode_float (
                         decoder,
                         (i == 0) ? &modData[0] : &headers[0],
                         (i == 0) ? modData.size() : headers.size(),
@@ -241,9 +382,9 @@ TEST_CASE("morph over time", "[morph]")
                 opus_decoder_destroy (decoder);
                 auto rescale_factor = 0.5f / testBuffer.getMagnitude (0, currentBuffer.getNumSamples());
                 testBuffer.applyGain (rescale_factor);
-                auto targetSimilarity = 0.01f;
-                auto difference = std::abs(similarity(testBuffer, currentBuffer) - targetSimilarity);
-                if ((difference < bestDifference) && (similarity(testBuffer, initialBuffer) > similarity(previousBuffer, initialBuffer))) {
+                auto targetSimilarity = 0.0f + (random.nextFloat() * 0.01);
+                auto difference = std::abs(comparer.similarityScore(testBuffer, currentBuffer) - targetSimilarity);
+                if ((difference < bestDifference)/* && (comparer.similarityScore(testBuffer, initialBuffer) < comparer.similarityScore(previousBuffer, initialBuffer))*/) {
                     bestDifference = difference;
                     nextBuffer = testBuffer;
                     best_i = step;
@@ -258,6 +399,7 @@ TEST_CASE("morph over time", "[morph]")
         }
     }
 }
+#endif
 
 #if false
 
