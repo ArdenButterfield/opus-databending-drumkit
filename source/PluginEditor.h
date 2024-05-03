@@ -2,7 +2,10 @@
 
 #include "PluginProcessor.h"
 #include "BinaryData.h"
+
 #include "melatonin_inspector/melatonin_inspector.h"
+
+#include "Frontend/Frontend.h"
 
 //==============================================================================
 class PluginEditor : public juce::AudioProcessorEditor
@@ -16,6 +19,7 @@ public:
     void resized() override;
 
 private:
+    Frontend frontend;
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     PluginProcessor& processorRef;

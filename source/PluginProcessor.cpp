@@ -2,6 +2,7 @@
 #include "PluginEditor.h"
 
 #include "OpusSynthVoice.h"
+#include "OpusSynthSound.h"
 
 //==============================================================================
 PluginProcessor::PluginProcessor()
@@ -12,14 +13,15 @@ PluginProcessor::PluginProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+      synthState(0, 128, {12345, 42}),
+      sampleRefresher(sampleBuilder, synthState),
+      changingSamplesMonitor(sampleBuilder, synthState)
 {
     for (int i = 0; i < NUM_SYNTH_VOICES; ++i) {
-        synthesiser.addVoice(new OpusSynthVoice());
+        synthesiser.addVoice(new OpusSynthVoice(synthState, sampleBuilder));
     }
-    for (unsigned i = 0; i < 127; ++i) {
-        synthesiser.addSound(new OpusSynthSound(42, i + 1, i));
-    }
+    synthesiser.addSound(new OpusSynthSound());
 }
 
 PluginProcessor::~PluginProcessor()
@@ -100,6 +102,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
     synthesiser.setCurrentPlaybackSampleRate(sampleRate);
+
  }
 
 void PluginProcessor::releaseResources()
@@ -133,12 +136,7 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
-
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -148,6 +146,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     buffer.clear();
 
     synthesiser.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+    changingSamplesMonitor.processBlock(buffer);
 }
 
 //==============================================================================
@@ -175,6 +174,11 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
+}
+
+SynthState& PluginProcessor::getSynthState()
+{
+    return synthState;
 }
 
 //==============================================================================

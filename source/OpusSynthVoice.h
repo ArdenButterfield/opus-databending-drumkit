@@ -6,12 +6,14 @@
 #define OPUSDATABENDINGDRUMKIT_OPUSSYNTHVOICE_H
 
 #include <juce_audio_basics/juce_audio_basics.h>
-#include <opus.h>
+
+#include "Sampler/SampleBuilder.h"
+#include "State/SynthState.h"
 
 class OpusSynthVoice : public juce::SynthesiserVoice
 {
 public:
-    OpusSynthVoice();
+    OpusSynthVoice(SynthState& s, SampleBuilder& b);
     bool canPlaySound (juce::SynthesiserSound* synthesiserSound) override;
     void startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound* synthesiserSound, int currentPitchWheelPosition) override;
     void stopNote (float velocity, bool allowTailOff) override;
@@ -20,7 +22,10 @@ public:
     void renderNextBlock (juce::AudioSampleBuffer& outputBuffer, int startSample, int numSamples) override;
     void setCurrentPlaybackSampleRate(double newRate) override;
 private:
+    SynthState& synthState;
+    SampleBuilder& sampleBuilder;
     const juce::AudioBuffer<float>* buffer;
+
     int bufferPosition;
 };
 

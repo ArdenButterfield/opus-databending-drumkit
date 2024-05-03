@@ -10,15 +10,11 @@
 class OpusSynthSound : public juce::SynthesiserSound
 {
 public:
-    OpusSynthSound(int64_t randomSeed, int n, int note);
+    OpusSynthSound() = default;
 
-    const juce::AudioBuffer<float>* getBuffer();
-
-    bool appliesToNote    (int _note) override { return note == _note; }
-    bool appliesToChannel (int) override        { return true; }
+    bool appliesToNote    (int) override { return true; }
+    bool appliesToChannel (int) override { return true; }
 private:
-    int note;
-    juce::AudioBuffer<float> buffer;
 };
 
 #endif //OPUSDATABENDINGDRUMKIT_OPUSSYNTHSOUND_H

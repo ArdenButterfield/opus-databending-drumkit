@@ -9,7 +9,7 @@ TEST_CASE ("Boot performance")
     {
         auto gui = juce::ScopedJuceInitialiser_GUI {};
         std::vector<Catch::Benchmark::storage_for<PluginProcessor>> storage (size_t (meter.runs()));
-        meter.measure ([&] (int i) { storage[(size_t) i].construct(); });
+        meter.measure ([&] (int i) { storage[(size_t) i].construct();});
     };
 
     BENCHMARK_ADVANCED ("Processor destructor")
