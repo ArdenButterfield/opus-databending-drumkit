@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.24.1)
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-local")
 include (PamplejuceVersion)
 
 # Configures universal binaries and decides which version of macOS to support
@@ -166,6 +167,9 @@ include(Tests)
 
 # A separate target keeps the Tests target fast!
 include(Benchmarks)
+
+# Like tests, but just for mucking around!
+include(Exploration)
 
 # Pass some config to GA (like our PRODUCT_NAME)
 include(GitHubENV)
