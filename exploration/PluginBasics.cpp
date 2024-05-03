@@ -1,3 +1,5 @@
+#ifndef SKIP_EXPLORATION
+
 #include <PluginProcessor.h>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
@@ -124,13 +126,13 @@ TEST_CASE ("bitflip_tryall", "[bitflip_tryall]")
     }
 }
 
+
 #endif
 
 #include "SampleComparer.h"
-
 const auto frameSize = 1440;
-const auto numFrames = 1;
 
+const auto numFrames = 1;
 
 void fillBuffer(std::vector<unsigned char>& data, juce::AudioBuffer<float>& buffer)
 {
@@ -260,7 +262,6 @@ void morphToDestination() {
         writer->writeFromAudioSampleBuffer(buffer, 0, buffer.getNumSamples());
     }
 }
-
 
 TEST_CASE("morph to destination", "[morphtodest]")
 {
@@ -495,3 +496,5 @@ TEST_CASE ("bitflip_tryall_gendata", "[bitflip_tryallgendata]")
     }
 }
 #endif
+
+#endif // SKIP_EXPLORATION
